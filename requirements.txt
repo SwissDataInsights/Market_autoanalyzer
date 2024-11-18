@@ -1,0 +1,12 @@
+pytz
+six
+yfinance==0.2.48
+pandas
+mplfinance
+numpy
+matplotlib
+openpyxl
+PyYAML
+urllib3==1.26.15
+pyopenssl
+requests==2.31.0

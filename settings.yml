@@ -1,0 +1,30 @@
+# Defining the dictionary of listed companies in Switzerland (YF format)
+companies:
+  "EURUSD=X": EURUSD=X
+  "SREN.SW": SwissReAG
+  "ABBN.SW": ABB_Ltd
+  "ALC.SW": Alcon
+  "GEBN.SW": Geberit
+  "GIVN.SW": Givaudan
+  "HOLN.SW": Holcim
+  "KNIN.SW": KuehneNagel
+  "LOGN.SW": Logitech
+  "LONN.SW": Lonza
+  "NESN.SW": Nestle
+  "NOVN.SW": Novartis
+  "PGHN.SW": PartnersGroup
+  "CFR.SW": Richemont
+  "ROG.SW": Roche
+  "SIKA.SW": Sika
+  "SOON.SW": Sonova
+  "SLHN.SW": SwissLife
+  "SCMN.SW": Swisscom
+  "UBSG.SW": UBS
+  "ZURN.SW": ZurichInsurance
+
+sender_email: "" # complete with your own parameters
+sender_password: "" # complete with your own parameters
+recipient_email: "" # complete with your own parameters
+subject: "Report SMI index"
+body: "The SMI index stock report is attached."
+attachment_file: "SMI_Report.pdf"
