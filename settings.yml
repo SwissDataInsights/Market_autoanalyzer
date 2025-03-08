@@ -1,6 +1,12 @@
 # Defining the dictionary of listed companies in Switzerland (YF format)
 companies:
-  "EURUSD=X": EURUSD=X
+  "EURUSD=X": EURUSD
+  "JPY=X" : USDJPY
+  "GBPUSD=X": GBPUSD
+  "CHF=X" : USDCHF
+  "AUDUSD=X" : AUDUSD
+  "CHFPLN=X" : CHFPLN
+  "XAUT-USD" : GOLD
   "SREN.SW": SwissReAG
   "ABBN.SW": ABB_Ltd
   "ALC.SW": Alcon

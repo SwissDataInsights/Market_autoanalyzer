@@ -8,8 +8,8 @@ from datetime import datetime, timedelta
 # Function to calculate RSI rounded to whole units
 def calculate_rsi(data, window=14):
     delta = data['Close'].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+    gain = delta.where(delta > 0, 0).rolling(window=window).mean()
+    loss = -delta.where(delta < 0, 0).rolling(window=window).mean()
     rs = gain / loss
     rsi = 100 - (100 / (1 + rs))
     return rsi.round(0)
@@ -32,13 +32,14 @@ except FileNotFoundError:
             companies = config["companies"]
     except FileNotFoundError:
         logging.error("Neither settings.yml nor settings_pv.yml could be found. Exiting.")
+        exit()
 
 # Create a directory for quote files if it does not already exist
 output_dir = 'historical_quotes'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
-# Set the date range - the last 4 years
+# Set the date range - the last 4 years (approx. 1440 days)
 end_date = datetime.today()
 start_date = end_date - timedelta(days=1440)
 
@@ -47,56 +48,78 @@ for symbol, company_name in companies.items():
     output_file_d1 = os.path.join(output_dir, f"{company_name}_data_D1.csv")
     output_file_1w = os.path.join(output_dir, f"{company_name}_data_W1.csv")
 
-    # Download daily data (D1)
-    data_d1 = yf.download(symbol, start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'), interval="1d")
+    # Download daily data (D1) with auto_adjust enabled and progress turned off
+    data_d1 = yf.download(
+        symbol,
+        start=start_date.strftime('%Y-%m-%d'),
+        end=end_date.strftime('%Y-%m-%d'),
+        interval="1d",
+        auto_adjust=True,
+        progress=False
+    )
 
     # Check if daily data has been downloaded
     if not data_d1.empty:
-        # Make sure the index is in DatetimeIndex format
+        # Ensure the index is in DatetimeIndex format
         data_d1.index = pd.to_datetime(data_d1.index)
         data_d1.index.name = "Date"
         data_d1.index = data_d1.index.tz_localize(None)
+
+        # Create 'Adj Close' column if it is missing (auto_adjust=True may remove it)
+        if 'Adj Close' not in data_d1.columns:
+            data_d1['Adj Close'] = data_d1['Close']
 
         # Calculation of RSI and 6-period Median
         data_d1['RSI'] = calculate_rsi(data_d1)
         data_d1['Median_6'] = calculate_rolling_median(data_d1)
 
-        # Delete the oldest 13 lines
+        # Delete the oldest 13 rows (to account for rolling window calculations)
         data_d1 = data_d1.iloc[13:]
 
-        # Set the columns in the desired order and name
+        # Set the columns in the desired order and rename them
         data_d1 = data_d1[['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'RSI', 'Median_6']]
         data_d1.columns = ["Open", "High", "Low", "Close", "Adj Close", "Volume", "RSI", "Median_6"]
 
-        # Save daily data to CSV file without index
+        # Save daily data to CSV file with the index labeled as "Date"
         data_d1.to_csv(output_file_d1, index_label="Date")
         print(f"Daily data saved to file {output_file_d1}")
     else:
         print(f"Failed to retrieve daily data for {symbol}.")
 
-    # Download new weekly data (1W)
-    data_1w = yf.download(symbol, start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'), interval="1wk")
+    # Download weekly data (1W) with auto_adjust enabled and progress turned off
+    data_1w = yf.download(
+        symbol,
+        start=start_date.strftime('%Y-%m-%d'),
+        end=end_date.strftime('%Y-%m-%d'),
+        interval="1wk",
+        auto_adjust=True,
+        progress=False
+    )
 
     # Check if weekly data has been downloaded
     if not data_1w.empty:
-        # Make sure the index is in DatetimeIndex format
+        # Ensure the index is in DatetimeIndex format
         data_1w.index = pd.to_datetime(data_1w.index)
         data_1w.index.name = "Date"
         data_1w.index = data_1w.index.tz_localize(None)
+
+        # Create 'Adj Close' column if it is missing
+        if 'Adj Close' not in data_1w.columns:
+            data_1w['Adj Close'] = data_1w['Close']
 
         # Calculation of RSI and 6-period Median
         data_1w['RSI'] = calculate_rsi(data_1w)
         data_1w['Median_6'] = calculate_rolling_median(data_1w)
 
-        # Removing the oldest 15 rows due to median calculation
+        # Remove the oldest 15 rows due to rolling calculations
         data_1w = data_1w.iloc[15:]
 
-        # Set the columns in the desired order and name
+        # Set the columns in the desired order and rename them
         data_1w = data_1w[['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'RSI', 'Median_6']]
         data_1w.columns = ["Open", "High", "Low", "Close", "Adj Close", "Volume", "RSI", "Median_6"]
 
-        # Save weekly data to CSV file without index
+        # Save weekly data to CSV file with the index labeled as "Date"
         data_1w.to_csv(output_file_1w, index_label="Date")
-        print(f"Weekly data saved to a file {output_file_1w}")
+        print(f"Weekly data saved to file {output_file_1w}")
     else:
         print(f"Failed to retrieve weekly data for {symbol}.")

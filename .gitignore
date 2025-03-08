@@ -5,7 +5,6 @@ __pycache__/
 
 *.log
 settings_pv.yml
-.idea/
 
 # C extensions
 *.so
